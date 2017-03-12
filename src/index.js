@@ -1,7 +1,10 @@
-import Tone from "tone";
+import paper from "paper";
+import {run} from "./prelude1";
 
 if (process.env.NODE_ENV !== 'production') {
     require("../index.html");
 }
 
-console.log("preludes");
+paper.setup(document.getElementById("root-canvas"));
+
+run();
