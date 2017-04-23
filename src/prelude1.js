@@ -29,11 +29,24 @@ const snareParams = {
         sustain: 0,
         release: 0
     }
-}
+};
+
+const metalParams = {
+    frequency: 200,
+    envelope: {
+        attack:0.001,
+        decay:1.4,
+        release:0.2,
+    },
+    harmonicity: 5.1,
+    modulationIndex: 32,
+    resonance: 4000,
+    octaves: 1.5
+};
 
 const kick = new MembraneSynth(kickParams).toMaster();
 const snare = new NoiseSynth(snareParams).toMaster();
-const metalsynth = new MetalSynth().toMaster();
+const metal = new MetalSynth(metalParams).toMaster();
 
 const kickEvent = new Event((time, pitch) => {
     kick.triggerAttackRelease(pitch, "8n", time);
@@ -46,7 +59,7 @@ window.kickLoop = kickLoop;
 Transport.start();
 
 createDatGUI();
-createSnareGUI();
+// createSnareGUI();
 
 function createDatGUI () {
     const params = {
@@ -64,39 +77,46 @@ function createDatGUI () {
         Transport.bpm.value = v;
     });
 
-    const kickFolder = gui.addFolder("Kick");
-    const pitchDecay = kickFolder.add(kickParams, "pitchDecay", 0, 1);
+    const membraneFolder = gui.addFolder("Membrane");
+    createMembraneGUI(membraneFolder);
+    const noiseFolder = gui.addFolder("Noise");
+    createNoiseGUI(noiseFolder);
+    const metalFolder = gui.addFolder("Metal");
+    createMetalGUI(metalFolder);
+}
+
+function createMembraneGUI (gui) {
+    const pitchDecay = gui.add(kickParams, "pitchDecay", 0, 1);
     pitchDecay.onChange(v => {
         kick.pitchDecay = v;
     });
-    const octaves = kickFolder.add(kickParams, "octaves", 0, 15);
+    const octaves = gui.add(kickParams, "octaves", 0, 15);
     octaves.onChange(v => {
         kick.octaves = v;
     });
-    const oscillatorType = kickFolder.add(kickParams.oscillator, "type", ["sine", "square", "triangle", "sawtooth"]);
+    const oscillatorType = gui.add(kickParams.oscillator, "type", ["sine", "square", "triangle", "sawtooth"]);
     oscillatorType.onChange(v => {
         kick.oscillator.type = v;
     });
-    const attack = kickFolder.add(kickParams.envelope, "attack", 0, 1);
+    const attack = gui.add(kickParams.envelope, "attack", 0, 1);
     attack.onChange(v => {
         kick.envelope.attack = v;
     });
-    const decay = kickFolder.add(kickParams.envelope, "decay", 0, 1);
+    const decay = gui.add(kickParams.envelope, "decay", 0, 1);
     decay.onChange(v => {
         kick.envelope.decay = v;
     });
-    const sustain = kickFolder.add(kickParams.envelope, "sustain", 0, 1);
+    const sustain = gui.add(kickParams.envelope, "sustain", 0, 1);
     sustain.onChange(v => {
         kick.envelope.sustain = v;
     });
-    const release = kickFolder.add(kickParams.envelope, "release", 0 , 5);
+    const release = gui.add(kickParams.envelope, "release", 0 , 5);
     release.onChange(v => {
         kick.envelope.release = v;
     });
 }
 
-function createSnareGUI () {
-    const gui = new dat.GUI();
+function createNoiseGUI (gui) {
     const noiseType = gui.add(snareParams.noise, "type", ["white", "pink", "brown"]);
     noiseType.onChange(v => {
         snare.noise.type = v;
@@ -119,6 +139,45 @@ function createSnareGUI () {
     });
 }
 
+function createMetalGUI (gui) {
+    const frequency = gui.add(metalParams, "frequency", 10, 1000);
+    frequency.onChange(v => {
+        metal.frequency.value = v;
+    });
+    const attack = gui.add(metalParams.envelope, "attack", 0, 1);
+    attack.onChange(v => {
+        metal.envelope.attack = v;
+    });
+    const decay = gui.add(metalParams.envelope, "decay", 0, 5);
+    decay.onChange(v => {
+        metal.envelope.decay = v;
+    });
+    const release = gui.add(metalParams.envelope, "release", 0 , 5);
+    release.onChange(v => {
+        metal.envelope.release = v;
+    });
+    // harmonicity: 5.1,
+    const harmonicity = gui.add(metalParams, "harmonicity", 0, 10);
+    harmonicity.onChange(v => {
+        metal.harmonicity = v;
+    });
+    // modulationIndex: 32,
+    const modulationIndex = gui.add(metalParams, "modulationIndex", 0, 100);
+    modulationIndex.onChange(v => {
+        metal.modulationIndex = v;
+    });
+    // resonance: 4000,
+    const resonance = gui.add(metalParams, "resonance", 0, 10000);
+    resonance.onChange(v => {
+        metal.resonance = v;
+    });
+    // octaves: 1.5
+    const octaves = gui.add(metalParams, "octaves", 0, 5);
+    octaves.onChange(v => {
+        metal.octaves = v;
+    });
+}
+
 export function run () {
     const kickSquare = new paper.Path.Rectangle({
         from: [100, 100],
@@ -132,9 +191,18 @@ export function run () {
     const snareSquare = new paper.Path.Rectangle({
         from: [200, 100],
         to: [300, 200],
-        fillColor: "#0f0",
+        fillColor: "#0f0"
     });
     snareSquare.onClick = function () {
         snare.triggerAttackRelease();
+    }
+    const metalSquare = new paper.Path.Rectangle({
+        from: [300, 100],
+        to: [400, 200],
+        fillColor: "#00f"
+    })
+
+    metalSquare.onClick = function () {
+        metal.triggerAttackRelease();
     }
 }

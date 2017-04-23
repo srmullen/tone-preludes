@@ -4,20 +4,34 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const DashboardPlugin = require("webpack-dashboard/plugin");
 
 module.exports = {
-    devtool: "eval-source-map",
-    entry: [
-        "./src/index"
-    ],
+    devtool: "source-map",
+    entry: {
+        "bundle1": "./src/index",
+        "eventsBundle": "./src/events/index",
+        "stepSequencer": "./src/stepSequencer/index"
+    },
     output: {
         path: path.join(__dirname, "dist"),
-        filename: "bundle.js"
+        filename: "[name].js"
     },
     plugins:[
         new DashboardPlugin({
             port: 3001
         }),
         new HtmlWebpackPlugin({
-            template: "./index.html"
+            filename: "index.html",
+            template: "./index.html",
+            chunks: ["bundle1"]
+        }),
+        new HtmlWebpackPlugin({
+            filename: "events.html",
+            template: "./src/events/index.html",
+            chunks: ["eventsBundle"]
+        }),
+        new HtmlWebpackPlugin({
+            filename: "stepSequencer.html",
+            template: "./src/events/index.html",
+            chunks: ["stepSequencer"]
         })
     ],
     module: {
