@@ -5,10 +5,35 @@ import {mod, range} from "../utils";
 
 paper.setup(document.getElementById("root-canvas"));
 
-const ROWS = 5;
-const COLS = 10;
+const scale = ["c3", "d3", "e3", "f3", "g3", "a3", "b3"].reverse();
+const ROWS = scale.length;
+const COLS = 16;
 
 let running = false;
+
+const piano = new Tone.PolySynth({
+    volume: -8,
+    oscillator: {
+        partials: [1, 2, 1],
+    },
+    portamento: 0.5
+}).toMaster();
+
+const bass = new Tone.MonoSynth({
+    volume: -10,
+    envelope: {
+        attack: 0.1,
+        decay: 0.3,
+        release: 2
+    },
+    filterEnvelope: {
+        attack: 1,
+        decay: 0.01,
+        sustain: 0.5,
+        baseFrequency: 200,
+        ocataves: 2.6
+    }
+}).toMaster();
 
 const guiParams = {
     quantization: "16n",
@@ -46,7 +71,8 @@ function drawGrid (columns, rows, {size=50, margin=2}) {
         const column = [];
         for (let j = 0; j < rows; j++) {
             const node = {
-                active: false
+                active: false,
+                value: scale[j]
             };
             const from = [i * (size + margin), j * (size + margin)];
             const square = new paper.Path.Rectangle({
@@ -68,7 +94,7 @@ function drawGrid (columns, rows, {size=50, margin=2}) {
     return grid;
 }
 
-const grid = drawGrid(10, 5, {size: 50, margin: 2});
+const grid = drawGrid(COLS, ROWS, {size: 50, margin: 2});
 
 let loop = createLoop();
 
@@ -77,7 +103,12 @@ function createLoop () {
         // unhighlight last column
         grid[mod(col-1, COLS)].map(unhighlight);
         // Highlight playing column
-        grid[col].map(highlight);
+        grid[col].map(node => {
+            if (node.active) {
+                piano.triggerAttackRelease(node.value, guiParams.quantization, time);
+            }
+            highlight(node);
+        });
     }, range(COLS), guiParams.quantization);
 }
 
