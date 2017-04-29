@@ -4,6 +4,7 @@ import dat from "../dat.gui.min";
 import {flowRight} from "lodash";
 import {mod, range} from "../utils";
 import {scale, pitch} from "palestrina.js/src/palestrina";
+import Grid from "./Grid";
 
 paper.setup(document.getElementById("root-canvas"));
 window.scale = scale;
@@ -20,7 +21,7 @@ const guiParams = {
             loop.start();
         } else {
             loop.stop();
-            clearGridHighlights(grid);
+            grid.clearHighlights(grid);
         }
     }
 };
@@ -63,7 +64,7 @@ const quantizationController = gui.add(guiParams, "quantization", ["64n", "32n",
 quantizationController.onChange(v => {
     // remove old loop
     loop.cancel().dispose();
-    clearGridHighlights(grid);
+    grid.clearGridHighlights();
     // create new loop
     loop = createLoop();
     if (running) {
@@ -82,72 +83,22 @@ modeController.onChange(v => {
 });
 gui.add(guiParams, "run");
 
-function drawGrid (columns, rows, {size=50, margin=2}) {
-    const gridGroup = new paper.Group();
-    const grid = [];
-    for (let i = 0; i < columns; i++) {
-        const column = [];
-        for (let j = 0; j < rows; j++) {
-            const node = {
-                active: false,
-                value: j
-            };
-            const from = [i * (size + margin), j * (size + margin)];
-            const square = new paper.Path.Rectangle({
-                from,
-                to: [from[0] + size, from[1] + size],
-                fillColor: "#f00"
-            });
-            square.onClick = function () {
-                node.active = !node.active;
-                square.fillColor = node.active ? "#0f0" : "#f00";
-            }
-            gridGroup.addChild(square);
-            node.square = square;
-            column[j] = node;
-        }
-        grid[i] = column;
-    }
-    gridGroup.translate(10, 10);
-    return grid;
-}
-
-const grid = drawGrid(COLS, ROWS, {size: 20, margin: 2});
+const grid = new Grid(COLS, ROWS);
+grid.draw({size: 20, margin: 2});
+grid.group.translate(10, 10);
 
 let loop = createLoop();
 
 function createLoop () {
     return new Tone.Sequence((time, col) => {
-        // unhighlight last column
-        grid[mod(col-1, COLS)].map(unhighlight);
-        // Highlight playing column
-        grid[col].map(node => {
+        grid.unhighlightColumn(mod(col-1, COLS));
+        grid.columns[col].map(node => {
             if (node.active) {
                 piano.triggerAttackRelease(getHz(intervals[node.value]), guiParams.quantization, time);
             }
-            highlight(node);
         });
+        grid.highlightColumn(col);
     }, range(COLS), guiParams.quantization);
-}
-
-function clearGridHighlights (grid) {
-    grid.forEach(column => column.forEach(unhighlight));
-}
-
-function unhighlight (node) {
-    if (node.active) {
-        node.square.fillColor = "#0f0";
-    } else {
-        node.square.fillColor = "#f00";
-    }
-}
-
-function highlight (node) {
-    if (node.active) {
-        node.square.fillColor = "#f0f";
-    } else {
-        node.square.fillColor = "#00f";
-    }
 }
 
 Tone.Transport.bpm.value = guiParams.tempo;
