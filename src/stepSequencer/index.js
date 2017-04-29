@@ -1,13 +1,34 @@
 import Tone from "tone";
 import paper from "paper";
 import dat from "../dat.gui.min";
+import {flowRight} from "lodash";
 import {mod, range} from "../utils";
+import {scale, pitch} from "palestrina.js/src/palestrina";
 
 paper.setup(document.getElementById("root-canvas"));
+window.scale = scale;
+window.pitch = pitch;
 
-const scale = ["c3", "d3", "e3", "f3", "g3", "a3", "b3"].reverse();
-const ROWS = scale.length;
+const guiParams = {
+    quantization: "16n",
+    tempo: 120,
+    root: "C",
+    mode: "major",
+    run: () => {
+        running = !running;
+        if (running) {
+            loop.start();
+        } else {
+            loop.stop();
+            clearGridHighlights(grid);
+        }
+    }
+};
+
+const intervals = range(16).reverse();
+const ROWS = intervals.length;
 const COLS = 16;
+let getHz = scaleMapping(guiParams.root, guiParams.mode);
 
 let running = false;
 
@@ -35,19 +56,6 @@ const bass = new Tone.MonoSynth({
     }
 }).toMaster();
 
-const guiParams = {
-    quantization: "16n",
-    tempo: 120,
-    run: () => {
-        running = !running;
-        if (running) {
-            loop.start();
-        } else {
-            loop.stop();
-            clearGridHighlights(grid);
-        }
-    }
-};
 const gui = new dat.GUI();
 const tempoController = gui.add(guiParams, "tempo", 20, 240);
 tempoController.onChange(v => Tone.Transport.bpm.value = v);
@@ -62,6 +70,16 @@ quantizationController.onChange(v => {
         loop.start();
     }
 });
+const rootController = gui.add(guiParams, "root", ["C", "D", "E", "F", "G", "A", "B"]);
+rootController.onChange(v => {
+    guiParams.root = v;
+    getHz = scaleMapping(v, guiParams.mode);
+});
+const modeController = gui.add(guiParams, "mode", ["major", "minor", "ionian", "dorian", "phrygian", "lydian", "mixolydian", "aeolian", "locrian"]);
+modeController.onChange(v => {
+    guiParams.mode = v;
+    getHz = scaleMapping(guiParams.root, v);
+});
 gui.add(guiParams, "run");
 
 function drawGrid (columns, rows, {size=50, margin=2}) {
@@ -72,7 +90,7 @@ function drawGrid (columns, rows, {size=50, margin=2}) {
         for (let j = 0; j < rows; j++) {
             const node = {
                 active: false,
-                value: scale[j]
+                value: j
             };
             const from = [i * (size + margin), j * (size + margin)];
             const square = new paper.Path.Rectangle({
@@ -94,7 +112,7 @@ function drawGrid (columns, rows, {size=50, margin=2}) {
     return grid;
 }
 
-const grid = drawGrid(COLS, ROWS, {size: 50, margin: 2});
+const grid = drawGrid(COLS, ROWS, {size: 20, margin: 2});
 
 let loop = createLoop();
 
@@ -105,7 +123,7 @@ function createLoop () {
         // Highlight playing column
         grid[col].map(node => {
             if (node.active) {
-                piano.triggerAttackRelease(node.value, guiParams.quantization, time);
+                piano.triggerAttackRelease(getHz(intervals[node.value]), guiParams.quantization, time);
             }
             highlight(node);
         });
@@ -134,3 +152,7 @@ function highlight (node) {
 
 Tone.Transport.bpm.value = guiParams.tempo;
 Tone.Transport.start();
+
+function scaleMapping (root, mode) {
+    return flowRight(pitch.midiToHz, scale.lower, scale[root], scale[mode]);
+}
