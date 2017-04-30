@@ -9,6 +9,5 @@ NoiseSynth
 
 Step Sequencer
 --------------
-- Scale/range selection.
 - Instrument selection.
 - Time Signatures

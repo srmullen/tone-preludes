@@ -1,11 +1,13 @@
 import paper from "paper";
 
-function Grid ({columns=16, rows=8, size=50, margin=2}) {
+function Grid ({columns=16, rows=8, size=50, margin=2, title="", position=[0, 0]}) {
     this.numCols = columns;
     this.numRows = rows;
     this.size = size;
     this.margin = margin;
     this.columns = [];
+    this.title = title;
+    this.position = position;
 };
 
 Grid.prototype.draw = function () {
@@ -35,6 +37,7 @@ Grid.prototype.draw = function () {
         this.columns[i] = column;
     }
     this.group = group;
+    this.group.translate(this.position);
 }
 
 Grid.prototype.clearHighlights = function (grid) {

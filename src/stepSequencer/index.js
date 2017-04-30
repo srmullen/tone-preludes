@@ -21,7 +21,7 @@ const guiParams = {
             loop.start();
         } else {
             loop.stop();
-            grid.clearHighlights(grid);
+            grid1.clearHighlights(grid);
         }
     }
 };
@@ -57,35 +57,34 @@ const bass = new Tone.MonoSynth({
     }
 }).toMaster();
 
-const grid = new Grid({columns: COLS, rows: ROWS, size: 20});
-grid.draw();
-grid.group.translate(10, 10);
+const grid1 = new Grid({columns: COLS, rows: ROWS, size: 20, title: "Grid 1", position: [10, 10]});
+const grid2 = new Grid({columns: COLS, rows: ROWS, size: 20, title: "Grid 2", position: [50, 100]});
+grid1.draw();
+grid2.draw();
 
-let loop = createLoop(grid);
+let loop = createLoop(grid1);
+const gridGUI = new dat.GUI();
 createGUI();
-createGridGUI(grid);
+createGridFolder(gridGUI, grid1);
+createGridFolder(gridGUI, grid2);
 
-function createGridGUI (grid) {
-    const gui = new dat.GUI();
-    const cols = gui.add(grid, "numCols");
+function createGridFolder (gui, grid) {
+    const folder = gui.addFolder(grid.title);
+    const cols = folder.add(grid, "numCols");
     cols.onChange(v => {
         grid.draw();
-        grid.group.translate(10, 10);
     });
-    const rows = gui.add(grid, "numRows");
+    const rows = folder.add(grid, "numRows");
     rows.onChange(v => {
         grid.draw();
-        grid.group.translate(10, 10);
     });
-    const size = gui.add(grid, "size");
+    const size = folder.add(grid, "size");
     size.onChange(v => {
         grid.draw();
-        grid.group.translate(10, 10);
     });
-    const margin = gui.add(grid, "margin");
+    const margin = folder.add(grid, "margin");
     margin.onChange(v => {
         grid.draw();
-        grid.group.translate(10, 10);
     });
 }
 
@@ -97,7 +96,7 @@ function createGUI (params) {
     quantizationController.onChange(v => {
         // remove old loop
         loop.cancel().dispose();
-        grid.clearGridHighlights();
+        grid1.clearHighlights();
         // create new loop
         loop = createLoop(grid);
         if (running) {
@@ -114,18 +113,6 @@ function createGUI (params) {
         getHz = scaleMapping(guiParams.root, v);
     });
     gui.add(guiParams, "run");
-}
-
-function createSequence () {
-    return new Tone.Sequence((time, col) => {
-        grid.unhighlightColumn(mod(col-1, COLS));
-        grid.columns[col].map(node => {
-            if (node.active) {
-                piano.triggerAttackRelease(getHz(intervals[node.value]), guiParams.quantization, time);
-            }
-        });
-        grid.highlightColumn(col);
-    }, range(COLS), guiParams.quantization);
 }
 
 function createLoop (grid) {
