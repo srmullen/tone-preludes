@@ -1,25 +1,28 @@
 import paper from "paper";
 
-function Grid (columns, rows) {
+function Grid ({columns=16, rows=8, size=50, margin=2}) {
     this.numCols = columns;
     this.numRows = rows;
+    this.size = size;
+    this.margin = margin;
+    this.columns = [];
 };
 
-Grid.prototype.draw = function ({size=50, margin=2}) {
+Grid.prototype.draw = function () {
+    if (this.group) this.group.clear();
     const group = new paper.Group();
-    const columns = [];
     for (let i = 0; i < this.numCols; i++) {
-        const column = [];
+        const column = this.columns[i] ? this.columns[i].slice(0, this.numRows) : [];
         for (let j = 0; j < this.numRows; j++) {
             const node = {
-                active: false,
+                active: column[j] ? column[j].active : false,
                 value: j
             };
-            const from = [i * (size + margin), j * (size + margin)];
+            const from = [i * (this.size + this.margin), j * (this.size + this.margin)];
             const square = new paper.Path.Rectangle({
                 from,
-                to: [from[0] + size, from[1] + size],
-                fillColor: "#f00"
+                to: [from[0] + this.size, from[1] + this.size],
+                fillColor: node.active ? "#0f0" : "#f00"
             });
             square.onClick = function () {
                 node.active = !node.active;
@@ -29,10 +32,9 @@ Grid.prototype.draw = function ({size=50, margin=2}) {
             node.square = square;
             column[j] = node;
         }
-        columns[i] = column;
+        this.columns[i] = column;
     }
     this.group = group;
-    this.columns = columns;
 }
 
 Grid.prototype.clearHighlights = function (grid) {
