@@ -1,6 +1,8 @@
 import paper from "paper";
+import {flowRight} from "lodash";
+import {scale, pitch} from "palestrina.js/src/palestrina";
 
-function Grid ({columns=16, rows=8, size=50, margin=2, title="", position=[0, 0]}) {
+function Grid ({columns=16, rows=8, size=50, margin=2, title="", position=[0, 0], root="C", mode="major", color="#f00"}) {
     this.numCols = columns;
     this.numRows = rows;
     this.size = size;
@@ -8,6 +10,10 @@ function Grid ({columns=16, rows=8, size=50, margin=2, title="", position=[0, 0]
     this.columns = [];
     this.title = title;
     this.position = position;
+    this.root = root;
+    this.mode = mode;
+    this.color = color;
+    this.getHz = scaleMapping(root, mode);
 };
 
 Grid.prototype.draw = function () {
@@ -21,14 +27,16 @@ Grid.prototype.draw = function () {
                 value: j
             };
             const from = [i * (this.size + this.margin), j * (this.size + this.margin)];
+            const color = new paper.Color(this.color);
             const square = new paper.Path.Rectangle({
                 from,
                 to: [from[0] + this.size, from[1] + this.size],
-                fillColor: node.active ? "#0f0" : "#f00"
+                fillColor: node.active ? color.add("#0f0") : color
             });
+
             square.onClick = function () {
                 node.active = !node.active;
-                square.fillColor = node.active ? "#0f0" : "#f00";
+                square.fillColor = node.active ? color.add("#0f0") : color;
             }
             group.addChild(square);
             node.square = square;
@@ -41,7 +49,7 @@ Grid.prototype.draw = function () {
 }
 
 Grid.prototype.clearHighlights = function (grid) {
-    this.columns.forEach(column => column.forEach(unhighlight));
+    this.columns.forEach(column => column.forEach(unhighlight.bind(null, new paper.Color(this.color))));
 }
 
 Grid.prototype.highlightColumn = function (i) {
@@ -49,22 +57,26 @@ Grid.prototype.highlightColumn = function (i) {
 }
 
 Grid.prototype.unhighlightColumn = function (i) {
-    this.columns[i].map(unhighlight);
+    this.columns[i].map(unhighlight.bind(null, new paper.Color(this.color)));
 }
 
-function unhighlight (node) {
+function unhighlight (color, node) {
     if (node.active) {
-        node.square.fillColor = "#0f0";
+        node.square.fillColor = color.add("#0f0");
     } else {
-        node.square.fillColor = "#f00";
+        node.square.fillColor = color;
     }
 }
 
 function highlight (node) {
-    if (node.active) {
-        node.square.fillColor = "#f0f";
+    node.square.fillColor = node.square.fillColor.add("#00f");
+}
+
+export function scaleMapping (root, mode) {
+    if (mode === "chromatic") {
+        return flowRight(pitch.midiToHz, scale.lower, scale[root]);
     } else {
-        node.square.fillColor = "#00f";
+        return flowRight(pitch.midiToHz, scale.lower, scale[root], scale[mode]);
     }
 }
 

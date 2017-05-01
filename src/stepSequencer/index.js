@@ -4,24 +4,21 @@ import dat from "../dat.gui.min";
 import {flowRight, range} from "lodash";
 import {mod} from "../utils";
 import {scale, pitch} from "palestrina.js/src/palestrina";
-import Grid from "./Grid";
+import Grid, {scaleMapping} from "./Grid";
 
 paper.setup(document.getElementById("root-canvas"));
-window.scale = scale;
-window.pitch = pitch;
+window.paper = paper;
 
-const guiParams = {
+const params = {
     quantization: "16n",
     tempo: 120,
-    root: "C",
-    mode: "major",
     run: () => {
         running = !running;
         if (running) {
             loop.start();
         } else {
             loop.stop();
-            grid1.clearHighlights(grid);
+            grid1.clearHighlights();
         }
     }
 };
@@ -29,7 +26,6 @@ const guiParams = {
 const intervals = range(16).reverse();
 const ROWS = intervals.length;
 const COLS = 16;
-let getHz = scaleMapping(guiParams.root, guiParams.mode);
 
 let running = false;
 
@@ -58,13 +54,14 @@ const bass = new Tone.MonoSynth({
 }).toMaster();
 
 const grid1 = new Grid({columns: COLS, rows: ROWS, size: 20, title: "Grid 1", position: [10, 10]});
-const grid2 = new Grid({columns: COLS, rows: ROWS, size: 20, title: "Grid 2", position: [50, 100]});
+const grid2 = new Grid({columns: COLS, rows: ROWS, size: 20, title: "Grid 2", position: [500, 10]});
 grid1.draw();
 grid2.draw();
 
 let loop = createLoop(grid1);
+let loop2 = createLoop(grid2);
 const gridGUI = new dat.GUI();
-createGUI();
+createGUI(params);
 createGridFolder(gridGUI, grid1);
 createGridFolder(gridGUI, grid2);
 
@@ -86,13 +83,26 @@ function createGridFolder (gui, grid) {
     margin.onChange(v => {
         grid.draw();
     });
+    const rootController = folder.add(grid, "root", ["C", "D", "E", "F", "G", "A", "B"]);
+    rootController.onChange(v => {
+        grid.getHz = scaleMapping(v, grid.mode);
+    });
+    const modeController = folder.add(grid, "mode",
+        ["major", "minor", "ionian", "dorian", "phrygian", "lydian", "mixolydian", "aeolian", "locrian", "chromatic"]);
+    modeController.onChange(v => {
+        grid.getHz = scaleMapping(grid.root, v);
+    });
+    const color = folder.addColor(grid, "color");
+    color.onChange(v => {
+        grid.draw();
+    });
 }
 
 function createGUI (params) {
     const gui = new dat.GUI();
-    const tempoController = gui.add(guiParams, "tempo", 20, 240);
+    const tempoController = gui.add(params, "tempo", 20, 240);
     tempoController.onChange(v => Tone.Transport.bpm.value = v);
-    const quantizationController = gui.add(guiParams, "quantization", ["64n", "32n", "16n", "8n", "4n", "2n"]);
+    const quantizationController = gui.add(params, "quantization", ["64n", "32n", "16n", "8n", "4n", "2n"]);
     quantizationController.onChange(v => {
         // remove old loop
         loop.cancel().dispose();
@@ -103,16 +113,11 @@ function createGUI (params) {
             loop.start();
         }
     });
-    const rootController = gui.add(guiParams, "root", ["C", "D", "E", "F", "G", "A", "B"]);
-    rootController.onChange(v => {
-        getHz = scaleMapping(v, guiParams.mode);
-    });
-    const modeController = gui.add(guiParams, "mode",
-        ["major", "minor", "ionian", "dorian", "phrygian", "lydian", "mixolydian", "aeolian", "locrian", "chromatic"]);
-    modeController.onChange(v => {
-        getHz = scaleMapping(guiParams.root, v);
-    });
-    gui.add(guiParams, "run");
+    gui.add(params, "run");
+}
+
+function createLoopFolder (gui, loop) {
+
 }
 
 function createLoop (grid) {
@@ -121,21 +126,13 @@ function createLoop (grid) {
         grid.unhighlightColumn(mod(col-1, grid.numCols));
         grid.columns[col].map(node => {
             if (node.active) {
-                piano.triggerAttackRelease(getHz(intervals[node.value]), guiParams.quantization, time);
+                piano.triggerAttackRelease(grid.getHz(intervals[node.value]), params.quantization, time);
             }
         });
         grid.highlightColumn(col);
         col = mod(col+1, grid.numCols);
-    }, guiParams.quantization);
+    }, params.quantization);
 }
 
-Tone.Transport.bpm.value = guiParams.tempo;
+Tone.Transport.bpm.value = params.tempo;
 Tone.Transport.start();
-
-function scaleMapping (root, mode) {
-    if (mode === "chromatic") {
-        return flowRight(pitch.midiToHz, scale.lower, scale[root]);
-    } else {
-        return flowRight(pitch.midiToHz, scale.lower, scale[root], scale[mode]);
-    }
-}
