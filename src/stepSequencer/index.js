@@ -10,15 +10,14 @@ paper.setup(document.getElementById("root-canvas"));
 window.paper = paper;
 
 const params = {
-    quantization: "16n",
     tempo: 120,
     run: () => {
         running = !running;
         if (running) {
-            loop.start();
+            loops.map(loop => loop.start());
         } else {
-            loop.stop();
-            grid1.clearHighlights();
+            loops.map(loop => loop.stop());
+            grids.map(grid => grid.clearHighlights());
         }
     }
 };
@@ -53,17 +52,19 @@ const bass = new Tone.MonoSynth({
     }
 }).toMaster();
 
-const grid1 = new Grid({columns: COLS, rows: ROWS, size: 20, title: "Grid 1", position: [10, 10]});
-const grid2 = new Grid({columns: COLS, rows: ROWS, size: 20, title: "Grid 2", position: [500, 10]});
-grid1.draw();
-grid2.draw();
+const grids = [
+    new Grid({columns: COLS, rows: ROWS, size: 20, title: "Grid 1", position: [10, 10]}),
+    new Grid({columns: COLS, rows: ROWS, size: 20, title: "Grid 2", position: [500, 10]})
+];
+grids.map(grid => grid.draw());
 
-let loop = createLoop(grid1);
-let loop2 = createLoop(grid2);
+const loops = [createLoop(grids[0]), createLoop(grids[1])];
 const gridGUI = new dat.GUI();
-createGUI(params);
-createGridFolder(gridGUI, grid1);
-createGridFolder(gridGUI, grid2);
+const loopGUI = createGUI(params);
+createLoopFolder(loopGUI, loops[0], "Loop 1");
+createLoopFolder(loopGUI, loops[1], "Loop 2");
+createGridFolder(gridGUI, grids[0]);
+createGridFolder(gridGUI, grids[1]);
 
 function createGridFolder (gui, grid) {
     const folder = gui.addFolder(grid.title);
@@ -102,36 +103,32 @@ function createGUI (params) {
     const gui = new dat.GUI();
     const tempoController = gui.add(params, "tempo", 20, 240);
     tempoController.onChange(v => Tone.Transport.bpm.value = v);
-    const quantizationController = gui.add(params, "quantization", ["64n", "32n", "16n", "8n", "4n", "2n"]);
-    quantizationController.onChange(v => {
-        // remove old loop
-        loop.cancel().dispose();
-        grid1.clearHighlights();
-        // create new loop
-        loop = createLoop(grid);
-        if (running) {
-            loop.start();
-        }
-    });
+
     gui.add(params, "run");
+    return gui;
 }
 
-function createLoopFolder (gui, loop) {
-
+function createLoopFolder (gui, loop, title="Loop") {
+    const folder = gui.addFolder(title);
+    folder.add(loop, "interval", ["64n", "32n", "16n", "8n", "4n", "2n"]);
+    folder.add(loop, "playbackRate", 0, 2);
+    folder.add(loop, "humanize");
 }
 
 function createLoop (grid) {
     let col = 0;
-    return new Tone.Loop((time) => {
+    const loop = new Tone.Loop();
+    loop.callback = (time) => {
         grid.unhighlightColumn(mod(col-1, grid.numCols));
         grid.columns[col].map(node => {
             if (node.active) {
-                piano.triggerAttackRelease(grid.getHz(intervals[node.value]), params.quantization, time);
+                piano.triggerAttackRelease(grid.getHz(intervals[node.value]), loop.interval, time);
             }
         });
         grid.highlightColumn(col);
         col = mod(col+1, grid.numCols);
-    }, params.quantization);
+    }
+    return loop;
 }
 
 Tone.Transport.bpm.value = params.tempo;
