@@ -19,8 +19,13 @@ const params = {
             loops.map(loop => loop.stop());
             grids.map(grid => grid.clearHighlights());
         }
+    },
+    save: () => {
+        localStorage.setItem("grids", JSON.stringify(grids.map(grid => grid.serialize())));
     }
 };
+
+const gridData = localStorage.grids ? JSON.parse(localStorage.grids) : [];
 
 const intervals = range(16).reverse();
 const ROWS = intervals.length;
@@ -52,10 +57,11 @@ const bass = new Tone.MonoSynth({
     }
 }).toMaster();
 
-const grids = [
-    new Grid({columns: COLS, rows: ROWS, size: 20, title: "Grid 1", position: [10, 10]}),
-    new Grid({columns: COLS, rows: ROWS, size: 20, title: "Grid 2", position: [500, 10]})
-];
+// const grids = [
+//     new Grid({key: "key1", width: COLS, height: ROWS, size: 20, title: "Grid 1", position: [10, 10]}),
+//     new Grid({key: "key2", width: COLS, height: ROWS, size: 20, title: "Grid 2", position: [500, 10]})
+// ];
+const grids = gridData.map(grid => new Grid(grid));
 grids.map(grid => grid.draw());
 
 const loops = [createLoop(grids[0]), createLoop(grids[1])];
@@ -68,11 +74,11 @@ createGridFolder(gridGUI, grids[1]);
 
 function createGridFolder (gui, grid) {
     const folder = gui.addFolder(grid.title);
-    const cols = folder.add(grid, "numCols");
+    const cols = folder.add(grid, "width");
     cols.onChange(v => {
         grid.draw();
     });
-    const rows = folder.add(grid, "numRows");
+    const rows = folder.add(grid, "height");
     rows.onChange(v => {
         grid.draw();
     });
@@ -105,6 +111,7 @@ function createGUI (params) {
     tempoController.onChange(v => Tone.Transport.bpm.value = v);
 
     gui.add(params, "run");
+    gui.add(params, "save");
     return gui;
 }
 
@@ -119,14 +126,14 @@ function createLoop (grid) {
     let col = 0;
     const loop = new Tone.Loop();
     loop.callback = (time) => {
-        grid.unhighlightColumn(mod(col-1, grid.numCols));
+        grid.unhighlightColumn(mod(col-1, grid.width));
         grid.columns[col].map(node => {
             if (node.active) {
                 piano.triggerAttackRelease(grid.getHz(intervals[node.value]), loop.interval, time);
             }
         });
         grid.highlightColumn(col);
-        col = mod(col+1, grid.numCols);
+        col = mod(col+1, grid.width);
     }
     return loop;
 }

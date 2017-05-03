@@ -2,9 +2,13 @@ import paper from "paper";
 import {flowRight} from "lodash";
 import {scale, pitch} from "palestrina.js/src/palestrina";
 
-function Grid ({columns=16, rows=8, size=50, margin=2, title="", position=[0, 0], root="C", mode="major", color="#f00"}) {
-    this.numCols = columns;
-    this.numRows = rows;
+function keyRequired () {
+    throw new Error("Key is required when creating Grid");
+}
+
+function Grid ({width=16, height=8, size=50, margin=2, title="", position=[0, 0], root="C", mode="major", color="#f00"}) {
+    this.width = width;
+    this.height = height;
     this.size = size;
     this.margin = margin;
     this.columns = [];
@@ -19,9 +23,9 @@ function Grid ({columns=16, rows=8, size=50, margin=2, title="", position=[0, 0]
 Grid.prototype.draw = function () {
     if (this.group) this.group.clear();
     const group = new paper.Group();
-    for (let i = 0; i < this.numCols; i++) {
-        const column = this.columns[i] ? this.columns[i].slice(0, this.numRows) : [];
-        for (let j = 0; j < this.numRows; j++) {
+    for (let i = 0; i < this.width; i++) {
+        const column = this.columns[i] ? this.columns[i].slice(0, this.height) : [];
+        for (let j = 0; j < this.height; j++) {
             const node = {
                 active: column[j] ? column[j].active : false,
                 value: j
@@ -59,6 +63,25 @@ Grid.prototype.highlightColumn = function (i) {
 Grid.prototype.unhighlightColumn = function (i) {
     this.columns[i].map(unhighlight.bind(null, new paper.Color(this.color)));
 }
+
+Grid.prototype.serialize = function () {
+    return {
+        width: this.width,
+        height: this.height,
+        size: this.size,
+        margin: this.margin,
+        title: this.title,
+        position: this.position,
+        root: this.root,
+        mode: this.mode,
+        color: this.color
+        // this.columns = [];
+    };
+};
+
+Grid.prototype.toString = function () {
+    return JSON.stringify(this.serialize());
+};
 
 function unhighlight (color, node) {
     if (node.active) {
