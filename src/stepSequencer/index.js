@@ -5,6 +5,7 @@ import {flowRight, range} from "lodash";
 import {mod} from "../utils";
 import {scale, pitch} from "palestrina.js/src/palestrina";
 import Grid, {scaleMapping} from "./Grid";
+import {piano, bass} from "./instruments";
 
 paper.setup(document.getElementById("root-canvas"));
 window.paper = paper;
@@ -41,30 +42,6 @@ const ROWS = intervals.length;
 const COLS = 16;
 
 let running = false;
-
-const piano = new Tone.PolySynth({
-    volume: -8,
-    oscillator: {
-        partials: [1, 2, 1],
-    },
-    portamento: 0.5
-}).toMaster();
-
-const bass = new Tone.MonoSynth({
-    volume: -10,
-    envelope: {
-        attack: 0.1,
-        decay: 0.3,
-        release: 2
-    },
-    filterEnvelope: {
-        attack: 1,
-        decay: 0.01,
-        sustain: 0.5,
-        baseFrequency: 200,
-        ocataves: 2.6
-    }
-}).toMaster();
 
 const grids = gridData.map(grid => new Grid(grid));
 grids.map(grid => grid.draw());
