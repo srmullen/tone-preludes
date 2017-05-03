@@ -22,6 +22,15 @@ const params = {
     },
     save: () => {
         localStorage.setItem("grids", JSON.stringify(grids.map(grid => grid.serialize())));
+    },
+    addGrid: () => {
+        const grid = new Grid({title: `${grids.length}`, position: [200, 200]});
+        const loop = createLoop(grid);
+        grid.draw();
+        createGridFolder(gridGUI, grid);
+        createLoopFolder(loopGUI, loop, loops.length);
+        grids.push(grid);
+        loops.push(loop);
     }
 };
 
@@ -57,20 +66,14 @@ const bass = new Tone.MonoSynth({
     }
 }).toMaster();
 
-// const grids = [
-//     new Grid({key: "key1", width: COLS, height: ROWS, size: 20, title: "Grid 1", position: [10, 10]}),
-//     new Grid({key: "key2", width: COLS, height: ROWS, size: 20, title: "Grid 2", position: [500, 10]})
-// ];
 const grids = gridData.map(grid => new Grid(grid));
 grids.map(grid => grid.draw());
 
-const loops = [createLoop(grids[0]), createLoop(grids[1])];
+const loops = grids.map(createLoop);
 const gridGUI = new dat.GUI();
 const loopGUI = createGUI(params);
-createLoopFolder(loopGUI, loops[0], "Loop 1");
-createLoopFolder(loopGUI, loops[1], "Loop 2");
-createGridFolder(gridGUI, grids[0]);
-createGridFolder(gridGUI, grids[1]);
+loops.map(createLoopFolder.bind(null, loopGUI));
+grids.map(createGridFolder.bind(null, gridGUI));
 
 function createGridFolder (gui, grid) {
     const folder = gui.addFolder(grid.title);
@@ -112,6 +115,7 @@ function createGUI (params) {
 
     gui.add(params, "run");
     gui.add(params, "save");
+    gui.add(params, "addGrid");
     return gui;
 }
 

@@ -6,7 +6,7 @@ function keyRequired () {
     throw new Error("Key is required when creating Grid");
 }
 
-function Grid ({width=16, height=8, size=50, margin=2, title="", position=[0, 0], root="C", mode="major", color="#f00"}) {
+function Grid ({width=16, height=8, size=20, margin=2, title="", position=[0, 0], root="C", mode="major", color="#f00"}) {
     this.width = width;
     this.height = height;
     this.size = size;
