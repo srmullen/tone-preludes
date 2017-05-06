@@ -6,12 +6,12 @@ function keyRequired () {
     throw new Error("Key is required when creating Grid");
 }
 
-function Grid ({width=16, height=8, size=20, margin=2, title="", position=[0, 0], root="C", mode="major", color="#f00"}) {
+function Grid ({width=16, height=8, size=20, margin=2, title="", position=[0, 0], root="C", mode="major", color="#f00", active=[]}) {
     this.width = width;
     this.height = height;
     this.size = size;
     this.margin = margin;
-    this.columns = [];
+    this.columns = initColumns(width, height, active);
     this.title = title;
     this.position = position;
     this.root = root;
@@ -74,10 +74,18 @@ Grid.prototype.serialize = function () {
         position: this.position,
         root: this.root,
         mode: this.mode,
-        color: this.color
-        // this.columns = [];
+        color: this.color,
+        active: getActive(this.columns)
     };
 };
+
+function getActive(columns) {
+    const active = [];
+    columns.forEach((col, i) => col.forEach((node, j) => {
+        if (node.active) active.push([i, j]);
+    }));
+    return active;
+}
 
 Grid.prototype.toString = function () {
     return JSON.stringify(this.serialize());
@@ -101,6 +109,31 @@ export function scaleMapping (root, mode) {
     } else {
         return flowRight(pitch.midiToHz, scale.lower, scale[root], scale[mode]);
     }
+}
+
+function initColumns (width, height, active) {
+    const columns = [];
+    for (let i = 0; i < width; i++) {
+        const column = [];
+        for (let j = 0; j < height; j++) {
+            const node = {
+                active: false,
+                value: j
+            };
+            column.push(node);
+        }
+        columns.push(column);
+    }
+    activateNodes(columns, active);
+    return columns;
+}
+
+function activateNodes (columns, active) {
+    active.forEach(([i, j]) => {
+        if (columns[i] && columns[i][j]) {
+            columns[i][j].active = true;
+        }
+    });
 }
 
 export default Grid;
