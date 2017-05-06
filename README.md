@@ -10,6 +10,6 @@ NoiseSynth
 Step Sequencer
 --------------
 - Instrument selection.
-- Loop and Grid as combined folder.
+- Save active elements
 - Time Signatures
 - Remove Grid

@@ -15,10 +15,12 @@ const params = {
     run: () => {
         running = !running;
         if (running) {
-            loops.map(loop => loop.start());
+            grids.map(({loop}) => loop.start());
         } else {
-            loops.map(loop => loop.stop());
-            grids.map(grid => grid.clearHighlights());
+            grids.map(({grid, loop}) => {
+                loop.stop();
+                grid.clearHighlights();
+            });
         }
     },
     save: () => {
@@ -43,16 +45,19 @@ const COLS = 16;
 
 let running = false;
 
-const grids = gridData.map(grid => new Grid(grid));
-grids.map(grid => grid.draw());
+const grids = gridData.map(data => {
+    const grid = new Grid(data);
+    const loop = createLoop(grid);
+    grid.draw();
+    return {grid, loop};
+});
 
-const loops = grids.map(createLoop);
 const gridGUI = new dat.GUI();
 const loopGUI = createGUI(params);
-loops.map(createLoopFolder.bind(null, loopGUI));
+// loops.map(createLoopFolder.bind(null, loopGUI));
 grids.map(createGridFolder.bind(null, gridGUI));
 
-function createGridFolder (gui, grid) {
+function createGridFolder (gui, {grid, loop}, i) {
     const folder = gui.addFolder(grid.title);
     const cols = folder.add(grid, "width");
     cols.onChange(v => {
@@ -93,6 +98,15 @@ function createGridFolder (gui, grid) {
     color.onChange(v => {
         grid.draw();
     });
+    folder.add(loop, "interval", ["64n", "32n", "16n", "8n", "4n", "2n"]);
+    folder.add(loop, "playbackRate", 0, 2);
+    folder.add(loop, "humanize");
+    const fns = {
+        remove () {
+            console.log(`remove ${i}`);
+        }
+    }
+    folder.add(fns, "remove");
 }
 
 function createGUI (params) {
@@ -104,13 +118,6 @@ function createGUI (params) {
     gui.add(params, "save");
     gui.add(params, "addGrid");
     return gui;
-}
-
-function createLoopFolder (gui, loop, title="Loop") {
-    const folder = gui.addFolder(title);
-    folder.add(loop, "interval", ["64n", "32n", "16n", "8n", "4n", "2n"]);
-    folder.add(loop, "playbackRate", 0, 2);
-    folder.add(loop, "humanize");
 }
 
 function createLoop (grid) {
