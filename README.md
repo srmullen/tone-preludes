@@ -9,5 +9,5 @@ NoiseSynth
 
 Step Sequencer
 --------------
-- Instrument selection.
+- Display node values.
 - Time Signatures

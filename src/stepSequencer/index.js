@@ -5,7 +5,7 @@ import {flowRight, range} from "lodash";
 import {mod} from "../utils";
 import {scale, pitch} from "palestrina.js/src/palestrina";
 import Grid, {scaleMapping} from "./Grid";
-import {piano, bass} from "./instruments";
+import * as instruments from "./instruments";
 
 paper.setup(document.getElementById("root-canvas"));
 window.paper = paper;
@@ -59,6 +59,7 @@ grids.map(createGridFolder.bind(null, gridGUI));
 
 function createGridFolder (gui, {grid, loop}, i) {
     const folder = gui.addFolder(grid.title);
+    const instrument = folder.add(grid, "instrument", Object.keys(instruments));
     const cols = folder.add(grid, "width");
     cols.onChange(v => {
         grid.draw();
@@ -132,7 +133,7 @@ function createLoop (grid, opts={}) {
         grid.unhighlightColumn(mod(col-1, grid.width));
         grid.columns[col].map(node => {
             if (node.active) {
-                piano.triggerAttackRelease(grid.getHz(intervals[node.value]), loop.interval, time);
+                instruments[grid.instrument].triggerAttackRelease(grid.getHz(intervals[node.value]), loop.interval, time);
             }
         });
         grid.highlightColumn(col);
