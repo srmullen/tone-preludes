@@ -62,6 +62,16 @@ function createGridFolder (gui, grid) {
     rows.onChange(v => {
         grid.draw();
     });
+    const positionX = folder.add(grid.position, 0);
+    positionX.name("X Position");
+    positionX.onChange(v => {
+        grid.draw();
+    });
+    const positionY = folder.add(grid.position, 1);
+    positionY.name("Y Position");
+    positionY.onChange(v => {
+        grid.draw();
+    });
     const size = folder.add(grid, "size");
     size.onChange(v => {
         grid.draw();
