@@ -24,7 +24,8 @@ const params = {
         }
     },
     save: () => {
-        localStorage.setItem("grids", JSON.stringify(grids.map(grid => grid.serialize())));
+        localStorage.setItem("grids", JSON.stringify(grids.map(({grid}) => grid.serialize())));
+        console.log("Grid saved successfully");
     },
     addGrid: () => {
         const grid = new Grid({title: `${grids.length}`, position: [200, 200]});
@@ -45,7 +46,7 @@ const COLS = 16;
 
 let running = false;
 
-const grids = gridData.map(data => {
+let grids = gridData.map(data => {
     const grid = new Grid(data);
     const loop = createLoop(grid);
     grid.draw();
@@ -103,7 +104,9 @@ function createGridFolder (gui, {grid, loop}, i) {
     folder.add(loop, "humanize");
     const fns = {
         remove () {
-            console.log(`remove ${i}`);
+            grid.group.clear();
+            loop.dispose();
+            grids = [...grids.slice(0, i), ...grids.slice(i + 1)];
         }
     }
     folder.add(fns, "remove");

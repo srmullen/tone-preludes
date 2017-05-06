@@ -10,6 +10,7 @@ NoiseSynth
 Step Sequencer
 --------------
 - Instrument selection.
-- Save active elements
+- Save active elements.
+- Save loop params.
 - Time Signatures
 - Remove Grid
