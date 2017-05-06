@@ -10,5 +10,4 @@ NoiseSynth
 Step Sequencer
 --------------
 - Instrument selection.
-- Save loop params.
 - Time Signatures

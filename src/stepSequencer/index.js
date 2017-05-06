@@ -24,7 +24,7 @@ const params = {
         }
     },
     save: () => {
-        localStorage.setItem("grids", JSON.stringify(grids.map(({grid}) => grid.serialize())));
+        localStorage.setItem("grids", JSON.stringify(grids.map(data => serialize(data))));
         console.log("Grid saved successfully");
     },
     addGrid: () => {
@@ -47,15 +47,14 @@ const COLS = 16;
 let running = false;
 
 let grids = gridData.map(data => {
-    const grid = new Grid(data);
-    const loop = createLoop(grid);
+    const grid = new Grid(data.grid);
+    const loop = createLoop(grid, data.loop);
     grid.draw();
     return {grid, loop};
 });
 
 const gridGUI = new dat.GUI();
 const loopGUI = createGUI(params);
-// loops.map(createLoopFolder.bind(null, loopGUI));
 grids.map(createGridFolder.bind(null, gridGUI));
 
 function createGridFolder (gui, {grid, loop}, i) {
@@ -123,9 +122,12 @@ function createGUI (params) {
     return gui;
 }
 
-function createLoop (grid) {
+function createLoop (grid, opts={}) {
     let col = 0;
     const loop = new Tone.Loop();
+    if (opts.interval) loop.interval = opts.interval;
+    if (opts.playbackRate) loop.playbackRate = opts.playbackRate;
+    if (opts.humanize) loop.humanize = opts.humanize;
     loop.callback = (time) => {
         grid.unhighlightColumn(mod(col-1, grid.width));
         grid.columns[col].map(node => {
@@ -137,6 +139,17 @@ function createLoop (grid) {
         col = mod(col+1, grid.width);
     }
     return loop;
+}
+
+function serialize ({grid, loop}) {
+    return {
+        grid: grid.serialize(),
+        loop: {
+            interval: loop.interval,
+            playbackRate: loop.playbackRate,
+            humanize: loop.humanize
+        }
+    };
 }
 
 Tone.Transport.bpm.value = params.tempo;
