@@ -9,5 +9,10 @@ NoiseSynth
 
 Step Sequencer
 --------------
-- Display node values.
-- Time Signatures
+- Fix node value errors.
+- Loop iterations.
+- Grid/Loop mute.
+- Loop start time.
+- Save to json file.
+- Time Signatures.
+- Node Class
