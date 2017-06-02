@@ -8,7 +8,8 @@ module.exports = {
     entry: {
         "bundle1": "./src/index",
         "eventsBundle": "./src/events/index",
-        "stepSequencer": "./src/stepSequencer/index"
+        "stepSequencer": "./src/stepSequencer/index",
+        "transport": "./src/transport/transport"
     },
     output: {
         path: path.join(__dirname, "dist"),
@@ -32,6 +33,11 @@ module.exports = {
             filename: "stepSequencer.html",
             template: "./src/events/index.html",
             chunks: ["stepSequencer"]
+        }),
+        new HtmlWebpackPlugin({
+            filename: "transport.html",
+            template: "./src/transport/index.html",
+            chunks: ["transport"]
         })
     ],
     module: {
