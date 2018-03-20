@@ -1,3 +1,4 @@
+import React from "react";
 import Tone from "tone";
 import {piano, bass} from "./instruments";
 

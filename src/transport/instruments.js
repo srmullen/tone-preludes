@@ -20,6 +20,6 @@ export const bass = new Tone.MonoSynth({
         decay: 0.01,
         sustain: 0.5,
         baseFrequency: 200,
-        ocataves: 2.6
+        ocataves: 6
     }
 }).toMaster();

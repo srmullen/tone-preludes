@@ -2,7 +2,7 @@ import Tone from "tone";
 import paper from "paper";
 import dat from "../dat.gui.min";
 import {flowRight, range} from "lodash";
-import {mod} from "../utils";
+import {mod} from "../utils/math";
 import {scale, pitch} from "palestrina.js/src/palestrina";
 import Grid, {scaleMapping} from "./Grid";
 import * as instruments from "./instruments";

@@ -9,7 +9,18 @@ module.exports = {
         "bundle1": "./src/index",
         "eventsBundle": "./src/events/index",
         "stepSequencer": "./src/stepSequencer/index",
-        "transport": "./src/transport/transport"
+        "preludes": "./src/preludes/index",
+        "transport": [
+            'react-hot-loader/patch',
+            // activate HMR for React
+
+            `webpack-dev-server/client?http://localhost:${3000}`,
+            // bundle the client for webpack-dev-server
+            // and connect to the provided endpoint
+
+            'webpack/hot/only-dev-server',
+            "./src/transport/transport"
+        ]
     },
     output: {
         path: path.join(__dirname, "dist"),
@@ -38,6 +49,11 @@ module.exports = {
             filename: "transport.html",
             template: "./src/transport/index.html",
             chunks: ["transport"]
+        }),
+        new HtmlWebpackPlugin({
+            filename: "preludes.html",
+            template: "./src/preludes/preludes.html",
+            chunks: ["preludes"]
         })
     ],
     module: {
@@ -51,6 +67,10 @@ module.exports = {
         }]
     },
     devServer: {
+        index: "preludes.html",
         contentBase: "./dist"
+    },
+    node: {
+        fs: 'empty'
     }
 }

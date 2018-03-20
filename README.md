@@ -16,3 +16,4 @@ Step Sequencer
 - Save to json file.
 - Time Signatures.
 - Node Class
+- Canon synced across devices.
