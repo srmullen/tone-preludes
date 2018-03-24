@@ -1,3 +1,4 @@
+import paper from 'paper';
 import Tone from "tone";
 
 const kick = new Tone.MembraneSynth({

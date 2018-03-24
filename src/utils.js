@@ -11,9 +11,9 @@ export function voiceToToneEvents (voice) {
     return voice.reduce((acc, event, i) => {
 		const previousEvent = last(acc);
 		const time = previousEvent ? previousEvent.time.clone().add(previousEvent.dur) : Tone.Time(0);
-		const {value, pitchClass, octave, dots} = event.props;
+		const {value, dots} = event.props;
         if (event.type === 'note') {
-            acc.push({type: event.type, time, pitchClass, octave, dur: `${durString(value, dots)}`});
+            acc.push({type: event.type, ...event.props, time, dur: `${durString(value, dots)}`});
         } else if (event.type === 'rest') {
             acc.push({type: event.type, time, dur: `${durString(value, dots)}`});
         } else if (type === 'chord') {
@@ -21,4 +21,16 @@ export function voiceToToneEvents (voice) {
         }
 		return acc;
 	}, []);
+}
+
+// Return a list of intervals between the voices
+export function getIntervals (v1, v2) {
+    let v1i = 0;
+    let v2i = 0;
+
+    while (v1i < v1.length && v2i < v2.length) {
+
+        v1i++;
+        v2i++;
+    }
 }

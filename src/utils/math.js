@@ -12,3 +12,7 @@ export function mod (n, m) {
     }
     return n % m;
 }
+
+export function reciprocal (n) {
+    return 1 / n;
+}

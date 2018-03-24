@@ -17,3 +17,7 @@ Step Sequencer
 - Time Signatures.
 - Node Class
 - Canon synced across devices.
+
+FIXME
+-----
+Paper.js is causing 'Worker error Error: Unterminated string constant' in build process.
